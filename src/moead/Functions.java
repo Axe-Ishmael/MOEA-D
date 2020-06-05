@@ -1,5 +1,7 @@
 package moead;
 
+import Utils.EDC;
+
 import java.util.List;
 
 public class Functions {
@@ -74,5 +76,67 @@ public class Functions {
 
 	public static double f2Norm(double[] x, double min, double max) {
 		return f2(x) / (max - min);		
+	}
+
+//---------------------------------------------EDC Part-------------------------------------------------
+
+
+	public static double MFT(EDC[] edc){
+		double sum = 0.0;
+		double FTO = 0.99;
+		for(int i = 0;i<edc.length;i++){
+			sum += (1-edc[i].getError_Coverage())/(1-FTO);
+		}
+		return sum/edc.length;
+	}
+
+	public static double HDFT(EDC[] edc){
+		double FTO = 0.99;  //目标错误覆盖率
+		double average = MFT(edc);
+		double sum = 0;
+		double FT = 0;
+		for (int i = 0;i<edc.length;i++){
+			FT = (1 - edc[i].getError_Coverage()) / (1 - FTO);
+			sum += (FT - average)*(FT - average);
+		}
+		sum = Math.sqrt(sum / edc.length);
+		return sum;
+	}
+
+	public static double obj(EDC[] edc){
+		double sum = 0.9*MFT(edc) + 0.1*HDFT(edc);
+		return sum;
+	}
+
+	//求解平均错误覆盖率
+	public static double Average_Coverage( EDC[] edc)
+	{
+		double sum = 0.0;
+		for (int i = 0; i < edc.length; i++)
+		{
+			sum += edc[i].getError_Coverage();
+		}
+		return sum / (edc.length);
+	}
+
+	//求解异构度
+	public static double Calculate_std(EDC[] edc)
+	{
+		double average = Average_Coverage(edc);
+		double sum = 0;
+		for (int i = 0; i < edc.length; i++)
+		{
+			sum += (edc[i].getError_Coverage() - average)*(edc[i].getError_Coverage() - average);
+		}
+		sum = Math.sqrt(sum / edc.length);
+		return sum;
+	}
+
+	public static double f1Test(double[] x){
+		return 0.0;
+	}
+
+	public static double f2Test(double[] x){
+		return 0.0;
 	}
 }

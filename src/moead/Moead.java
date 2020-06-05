@@ -1,5 +1,7 @@
 package moead;
 
+import Utils.EDC;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -13,32 +15,35 @@ public class Moead {
 	private double maxF2 = -Double.MAX_VALUE;
 
 	public List<List<Double>> moead(int iterations, int N, int neighborSize, int genomeSize) {
-		double[][] weightVectors = Initializer.generateWeightVectors(N);
+		double[][] weightVectors = Initializer.generateWeightVectors(N);//产生N个权重向量
 		
 		// 1.1
 		// Dosen't work as expected, so was commented out
 		// Instead full list is returned
 		//List<List<Double>> EP = new ArrayList<List<Double>>(); // external population
 		// 1.2
-		int[][] B = Initializer.getNeighbors(weightVectors, neighborSize); // neighbors
+		int[][] Neighbors = Initializer.getNeighbors(weightVectors, neighborSize); // neighbors 获得邻居
 		// 1.3
-		double[][] population = Initializer.getRandomPopulation(N, genomeSize);
-		double[][] functionValues = Initializer.computeFunctionValues(population);
+//		double[][] population = Initializer.getRandomPopulation(N, genomeSize);
+		EDC[][] population = Initializer.getRandomEDCPopulation(N,genomeSize);
+//		double[][] functionValues = Initializer.computeFunctionValues(population);
+		double[][] functionValues = Initializer.computeEDCFunctionValues(population);
 		// 1.4
-		double[] z = Initializer.getReferencePoint(functionValues); // reference point
+		double[] refPoint = Initializer.getReferencePoint(functionValues); // reference point
 
 		int count = 0;
 		boolean end = false;
 		while (!end) {
+
 			updateMinMax(functionValues);
 			for (int i = 0; i < N; i++) {
 				// 2.1
-				double[] y = reproduce(population, B[i], i);
+				EDC[] newSolution = reproduce(population, Neighbors[i], i);
 				// 2.2 - no repair needed
 				// 2.3
-				updateReferencePoint(z, y, weightVectors[i]);
+				updateReferencePoint(refPoint, newSolution, weightVectors[i]);
 				// 2.4
-				updateNeighborhood(population, functionValues, B[i], weightVectors, z, y);
+				updateNeighborhood(population, functionValues, Neighbors[i], weightVectors, refPoint, newSolution);
 				// 2.5
 //				Dosen't work as expected, so was commented out
 //				updateEP(EP, y, weightVectors[i], z);
@@ -53,10 +58,10 @@ public class Moead {
 		}
 
 		List<List<Double>> result = new ArrayList<List<Double>>();
-		for (int i = 0; i < functionValues.length; i++) {
+		for (int i = 0; i < functionValues.length; i++) {//functionValues.length = Population.length(EDC组数)
 			List<Double> l = new ArrayList<Double>();
-			double val1 = (functionValues[i][0] - z[0]) / (maxF1 - minF1);
-			double val2 = (functionValues[i][1] - z[1]) / (maxF2 - minF2);
+			double val1 = (functionValues[i][0] - refPoint[0]) / (maxF1 - minF1);
+			double val2 = (functionValues[i][1] - refPoint[1]) / (maxF2 - minF2);
 			l.add(val1);
 			l.add(val2);
 			result.add(l);
@@ -82,6 +87,7 @@ public class Moead {
 //		return EP;
 	}
 
+	//找出functionValues中两个目标函数的最大值和最小值
 	private void updateMinMax(double[][] functionValues) {
 		List<Double> f1Values = new ArrayList<Double>();
 		List<Double> f2Values = new ArrayList<Double>();
@@ -95,63 +101,95 @@ public class Moead {
 		minF2 = Collections.min(f2Values);
 		maxF2 = Collections.max(f2Values);
 	}
-	
-	private double[] reproduce(double[][] population, int[] neighbors, int index) {
+
+	//(?)变异操作
+//	private double[] reproduce(double[][] population, int[] neighbors, int index) {
+//		Random rand = new Random();
+//		int parent1Index = neighbors[rand.nextInt(neighbors.length)];//生成一个范围在0~neighbors.length（不包含neighbors.length）内的任意正整数
+//		int parent2Index = neighbors[rand.nextInt(neighbors.length)];
+//		double[] parent1 = population[parent1Index];//从population中选择一行
+//		double[] parent2 = population[parent2Index];
+//
+//		double[] newSolution = new double[parent1.length];
+//		for (int i = 0; i < parent1.length; i++) {
+//			if (rand.nextDouble() < 0.01) {
+//				// mutate (see paper p. 718)  变异操作
+//				newSolution[rand.nextInt(parent1.length)] = rand.nextDouble();
+//			}
+//			else {
+//				newSolution[i] = (parent1[i] + parent2[i]) / 2;
+//			}
+//		}
+//
+//		return newSolution;
+//	}
+
+	private EDC[] reproduce(EDC[][] population, int[] neighbors, int index) {
 		Random rand = new Random();
 		int parent1Index = neighbors[rand.nextInt(neighbors.length)];
 		int parent2Index = neighbors[rand.nextInt(neighbors.length)];
-		double[] parent1 = population[parent1Index];
-		double[] parent2 = population[parent2Index];
+		EDC[] parent1 = population[parent1Index];
+		EDC[] parent2 = population[parent2Index];
 
-		double[] newSolution = new double[parent1.length];
+		EDC[] newSolution = new EDC[parent1.length];
 		for (int i = 0; i < parent1.length; i++) {
+			newSolution[i] = new EDC();
 			if (rand.nextDouble() < 0.01) {
 				// mutate (see paper p. 718)
-				newSolution[rand.nextInt(parent1.length)] = rand.nextDouble();
+				newSolution[rand.nextInt(parent1.length)] = new EDC(rand.nextDouble());
 			}
 			else {
-				newSolution[i] = (parent1[i] + parent2[i]) / 2;
+				newSolution[i] = new EDC((parent1[i].getError_Coverage() + parent2[i].getError_Coverage()) / 2);
 			}
 		}
-		
+
 		return newSolution;
 	}
 
-	private void updateReferencePoint(double[] z, double[] y, double[] weightVector) {
-		double f1Value = Functions.f1(y);
-		double f2Value = Functions.f2(y);
-		z[0] = Math.min(z[0], f1Value);
-		z[1] = Math.min(z[1], f2Value);
+	//更新参考点
+	private void updateReferencePoint(double[] refPoint, EDC[] newSolution, double[] weightVector) {
+		double f1Value = Functions.Average_Coverage(newSolution);
+		double f2Value = Functions.Calculate_std(newSolution);
+		refPoint[0] = Math.min(refPoint[0], f1Value);
+		refPoint[1] = Math.min(refPoint[1], f2Value);
 	}
 
-	private void updateNeighborhood(double[][] population,
+	//更新邻居
+	private void updateNeighborhood(EDC[][] population,
 			double[][] functionValues, int[] neighbors,
-			double[][] weightVectors, double[] z, double[] y) {
+			double[][] weightVectors, double[] refPoint, EDC[] newSolution) {
 
-		double y1Val = Functions.f1(y);
-		double y2Val = Functions.f2(y);
+		double y1Val = Functions.Average_Coverage(newSolution);
+		double y2Val = Functions.Calculate_std(newSolution);
 
 		for (int i = 0; i < neighbors.length; i++) {
 			int index = neighbors[i];
-
-			double gNeighbor = computeMaxCombinedValues(functionValues[index][0], functionValues[index][1], weightVectors[index], z);
-			double gY = computeMaxCombinedValues(y1Val, y2Val, weightVectors[index], z);
+//
+			double gNeighbor = computeMaxCombinedValues(functionValues[index][0], functionValues[index][1], weightVectors[index], refPoint);
+			double gY = computeMaxCombinedValues(y1Val, y2Val, weightVectors[index], refPoint);
 			if (gY <= gNeighbor) {
-				population[index] = y;
+				population[index] = newSolution;
 				functionValues[index][0] = y1Val;
 				functionValues[index][1] = y2Val;
 			}
 		}
 	}
-	
+
+	//需要改
 	private double computeMaxCombinedValues(double f1Val, double f2Val, double[] weightVector,
-			double[] z) {
+			double[] refPoint) {
 //		First possibility: use max
 		return Math.max(
-				(f1Val - z[0]) / (maxF1 - minF1) * weightVector[0],
-				(f2Val - z[1]) / (maxF2 - minF2) * weightVector[1]);
-//		Second possibility: don't use max but instead addition
-//		return ((f1Val - z[0]) / (maxF1 - minF1) * weightVector[0]) + ((f2Val - z[1]) / (maxF2 - minF2) * weightVector[1]);
+				(f1Val - refPoint[0]) / (maxF1 - minF1) * weightVector[0],
+				(f2Val - refPoint[1]) / (maxF2 - minF2) * weightVector[1]);
+
+		//Second possibility: don't use max but instead addition
+//		return ((f1Val - refPoint[0]) / (maxF1 - minF1) * weightVector[0]) + ((f2Val - refPoint[1]) / (maxF2 - minF2) * weightVector[1]);
+
+		//-------------------------------------------------------------------------------
+//		return Math.max(
+//				(f1Val - refPoint[0]) / maxF1  * weightVector[0],
+//				(f2Val - refPoint[1]) / maxF2  * weightVector[1]);
 	}
 
 //	Dosen't work as expected, so was commented out

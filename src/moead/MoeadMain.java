@@ -7,10 +7,10 @@ import java.util.List;
 
 public class MoeadMain {
 
-	private static final int ITERATIONS = 1000;
-	private static final int POPULATION_SIZE = 300;
-	private static final int NEIGHBOR_SIZE = 20;
-	private static final int GENOME_SIZE = 100;
+	private static final int ITERATIONS = 100;
+	private static final int POPULATION_SIZE = 30;
+	private static final int NEIGHBOR_SIZE = 10;
+	private static final int GENOME_SIZE = 10;
 
 	public static void main(String[] args) {
 		if (POPULATION_SIZE <= NEIGHBOR_SIZE) {
@@ -23,7 +23,8 @@ public class MoeadMain {
 		Moead moead = new Moead();
 		List<List<Double>> solution = moead.moead(ITERATIONS, POPULATION_SIZE, NEIGHBOR_SIZE, GENOME_SIZE);
 		Printer.printSolution(solution);
-		saveToFile("/tmp/moead-sol.txt", solution);
+//		saveToFile("/desktop/moead-sol.txt", solution);
+		saveToFile("C:\\Users\\Administrator\\Desktop", solution);
 	}
 
 	private static void saveToFile(String filename, List<List<Double>> solution) {
