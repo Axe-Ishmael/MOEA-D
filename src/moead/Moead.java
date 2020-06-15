@@ -17,18 +17,13 @@ public class Moead {
 	public List<List<Double>> moead(int iterations, int N, int neighborSize, int genomeSize) {
 		double[][] weightVectors = Initializer.generateWeightVectors(N);//产生N个权重向量
 		
-		// 1.1
-		// Dosen't work as expected, so was commented out
-		// Instead full list is returned
-		//List<List<Double>> EP = new ArrayList<List<Double>>(); // external population
-		// 1.2
+
 		int[][] Neighbors = Initializer.getNeighbors(weightVectors, neighborSize); // neighbors 获得邻居
-		// 1.3
-//		double[][] population = Initializer.getRandomPopulation(N, genomeSize);
+
 		EDC[][] population = Initializer.getRandomEDCPopulation(N,genomeSize);
-//		double[][] functionValues = Initializer.computeFunctionValues(population);
+
 		double[][] functionValues = Initializer.computeEDCFunctionValues(population);
-		// 1.4
+
 		double[] refPoint = Initializer.getReferencePoint(functionValues); // reference point
 
 		int count = 0;
@@ -133,13 +128,16 @@ public class Moead {
 
 		EDC[] newSolution = new EDC[parent1.length];
 		for (int i = 0; i < parent1.length; i++) {
-			newSolution[i] = new EDC();
+
 			if (rand.nextDouble() < 0.01) {
 				// mutate (see paper p. 718)
-				newSolution[rand.nextInt(parent1.length)] = new EDC(rand.nextDouble());
+//				newSolution[rand.nextInt(parent1.length)] = new EDC(rand.nextDouble());
+				int soh = rand.nextInt(2);
+				newSolution[i] = Initializer.generateEDCduetoTable(soh,rand);
 			}
 			else {
-				newSolution[i] = new EDC((parent1[i].getError_Coverage() + parent2[i].getError_Coverage()) / 2);
+//				newSolution[i] = new EDC((parent1[i].getError_Coverage() + parent2[i].getError_Coverage()) / 2);
+				newSolution[i] = parent2[i];
 			}
 		}
 
@@ -192,50 +190,5 @@ public class Moead {
 //				(f2Val - refPoint[1]) / maxF2  * weightVector[1]);
 	}
 
-//	Dosen't work as expected, so was commented out
-//	private void updateEP(List<List<Double>> EP, double[] y, double[] weightVector, double[] z) {
-//		// remove all vectors dominated by F(y)
-//		// check if any vector in EP dominates F(y)
-//		double f1Val = Functions.f1(y);
-//		double f2Val = Functions.f2(y);
-//		boolean yIsDominated = false;
-//		for (Iterator<List<Double>> it = EP.iterator(); it.hasNext();) {
-//			List<Double> epVector = it.next();
-//
-//			double[] yValue = new double[2];
-//			yValue[0] = f1Val;
-//			yValue[1] = f2Val;
-//
-//			double[] epValue = new double[2];
-//			epValue[0] = epVector.get(0);
-//			epValue[1] = epVector.get(1);
-//
-//			if (dominates(yValue, epValue)) {
-//				it.remove();
-//			}
-//			if (dominates(epValue, yValue)) {
-//				yIsDominated = true;
-//			}
-//			if (yValue[0] == epValue[0] && yValue[1] == epValue[1]) {
-//				yIsDominated = true;
-//			}
-//		}
-//		if (!yIsDominated) {
-//			List<Double> newExternal = new ArrayList<Double>();
-//			newExternal.add(f1Val);
-//			newExternal.add(f2Val);
-//			newExternal.add(weightVector[0]);
-//			newExternal.add(weightVector[1]);
-//			EP.add(newExternal);
-//		}
-//	}
-//
-//	/**
-//	 * @param a
-//	 * @return true if a dominates b
-//	 */
-//	private boolean dominates(double[] a, double[] b) {
-//		return (a[0] <= b[0] && a[1] <= b[1]) && (a[0] < b[0] || a[1] < b[1]);
-//	}
 
 }

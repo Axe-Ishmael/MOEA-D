@@ -187,7 +187,7 @@ public class Initializer {
 			total_Time = Functions.Total_Time(edcPop[i]);
 			total_FPGA_Square = Functions.Total_FPGA_SQUARE(edcPop[i]);
 
-			//新产生的EDC组 是否满足约束条件 如果不满足约束条件则把该行重新覆盖
+			//新产生的EDC组 是否满足约束条件 如果不满足约束条件则把该Row重新覆盖
 			if (total_Time > timeLimit || total_FPGA_Square > FPGA_Square_Limit){
 				i--;
 			}
@@ -292,7 +292,7 @@ public class Initializer {
 			break;
 
 			default:
-				edc = new EDC();
+
 		}
 
 
