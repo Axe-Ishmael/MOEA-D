@@ -13,6 +13,8 @@ public class MoeadMain {
 	private static final int GENOME_SIZE = 10;
 
 	public static void main(String[] args) {
+
+		long  startTime = System.currentTimeMillis();//获取开始时间
 		if (POPULATION_SIZE <= NEIGHBOR_SIZE) {
 			System.out.println("Population size (" + POPULATION_SIZE
 					+ ") must be greater/equal to neighbor size ("
@@ -24,7 +26,10 @@ public class MoeadMain {
 		List<List<Double>> solution = moead.moead(ITERATIONS, POPULATION_SIZE, NEIGHBOR_SIZE, GENOME_SIZE);
 		Printer.printSolution(solution);
 //		saveToFile("/desktop/moead-sol.txt", solution);
-		saveToFile("C:\\Users\\Administrator\\Desktop", solution);
+//		saveToFile("C:\\Users\\Administrator\\Desktop", solution);
+		long endTime = System.currentTimeMillis();    //获取结束时间
+		System.out.println("程序运行时间：" + (endTime - startTime) + "ms");    //输出程序运行时间
+
 	}
 
 	private static void saveToFile(String filename, List<List<Double>> solution) {

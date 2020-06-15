@@ -6,6 +6,7 @@ import java.util.List;
 
 public class Functions {
 
+
 	public static double f1(List<Double> x) {
 		double result = x.get(0);
 		int n = x.size();
@@ -132,11 +133,27 @@ public class Functions {
 		return sum;
 	}
 
-	public static double f1Test(double[] x){
-		return 0.0;
+	public static double Total_Time(EDC[] edc){
+
+		double total_time = 0;
+		for (int i = 0 ;i<edc.length;i++){
+			total_time += edc[i].getEDC_Time();
+		}
+
+		return total_time;
 	}
 
-	public static double f2Test(double[] x){
-		return 0.0;
+
+	public static int Total_FPGA_SQUARE(EDC[] edc){
+
+		int total_FPGA_Square = 0;
+		for (int i = 0;i<edc.length;i++){
+			total_FPGA_Square += edc[i].getFPGA_Sqare();
+		}
+
+		return total_FPGA_Square;
+
 	}
+
+
 }
